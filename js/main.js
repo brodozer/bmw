@@ -1,4 +1,4 @@
-const accordeon = function () {
+const accordeon = () => {
     const removeClass = function (elems, className) {
         elems.forEach((element) => {
             element.classList.remove(className);
@@ -29,4 +29,43 @@ const accordeon = function () {
     });
 };
 
+const smoothScroll = () => {
+    const link = document.querySelectorAll('[href^="#"]:not([href="#"])');
+
+    link.forEach((l) => {
+        l.addEventListener('click', (e) => {
+            e.preventDefault();
+            const id = l.getAttribute('href').substring(1);
+            //console.log('id:', id);
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+};
+
+const tabs = () => {
+    const tabBtns = document.querySelectorAll('[data-tabs-handler]');
+    const tabContent = document.querySelectorAll('[data-tabs-field]');
+
+    for (const btn of tabBtns) {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach((b) => {
+                if (btn === b) {
+                    btn.classList.add('design-list__item_active');
+                } else {
+                    b.classList.remove('design-list__item_active');
+                }
+            });
+            tabContent.forEach((c) => {
+                if (btn.dataset.tabsHandler === c.dataset.tabsField) {
+                    c.classList.remove('hidden');
+                } else {
+                    c.classList.add('hidden');
+                }
+            });
+        });
+    }
+};
+
 accordeon();
+smoothScroll();
+tabs();
