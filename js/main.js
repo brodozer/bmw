@@ -71,13 +71,36 @@ const tabs = () => {
 const modal = () => {
     const popup = document.querySelector('.modal');
     const popupBtns = document.querySelectorAll('.more');
+    const body = document.body;
+
+    const lockScroll = () => {
+        const scrollWidth = window.innerWidth - body.clientWidth;
+        const scrollPosition = window.pageYOffset;
+        body.dataset.positionY = scrollPosition;
+        body.style.cssText = `
+            position: fixed;
+            top: -${scrollPosition}px;
+            left: 0;
+            overflow: hidden;
+            width: 100%;
+            height: 100vh;
+            padding-right: ${scrollWidth}px;
+        `;
+    };
+
+    const unlockScroll = () => {
+        body.style.cssText = '';
+        window.scroll(0, body.dataset.positionY);
+    };
 
     const popupOpen = () => {
         popup.classList.remove('hidden');
+        lockScroll();
     };
 
     const popupClose = () => {
         popup.classList.add('hidden');
+        unlockScroll();
     };
 
     popupBtns.forEach((btn) => {
@@ -111,6 +134,73 @@ class Menu {
     }
 }
 
+const sendForm = () => {
+    const url = 'https://jsonplaceholder.typicode.com/posts';
+    let key = true;
+    const forms = document.querySelectorAll('form');
+    const validate = (value) => {
+        if (/^\s*$/.test(value)) {
+            key = false;
+        }
+    };
+
+    const small = document.createElement('small');
+
+    const callback = (response, form) => {
+        const btn = form.querySelector('button');
+        form.reset();
+        small.innerHTML = 'Ваша заявка №' + response.id + 'принята';
+        small.style.color = 'green';
+        form.appendChild(small);
+        btn.disabled = true;
+        btn.style.background = 'gray';
+        setTimeout(() => {
+            small.innerHTML = '';
+            btn.disabled = false;
+            btn.style.background = 'linear-gradient(93.53deg, #ED3125 11.43%, #E8223A 80.79%)';
+        }, 5000);
+    };
+
+    const falseCallback = (response, f) => {
+        small.innerHTML = 'Что-то пошло не так. Попробуйте позже';
+        f.appendChild(small);
+    };
+
+    const send = (data, form, cb, fcb) => {
+        const request = new XMLHttpRequest();
+        request.open('POST', url);
+        request.addEventListener('readystatechange', () => {
+            if (request.readyState !== 4) return;
+            if (request.status === 200 || request.status === 201) {
+                const response = JSON.parse(request.responseText);
+                cb(response, form);
+            } else {
+                fcb(request.responseText, form);
+            }
+        });
+        request.send(data);
+    };
+
+    forms.forEach((f) => {
+        f.addEventListener('submit', (ev) => {
+            ev.preventDefault();
+            let data = {};
+            for (const { name, value } of f.elements) {
+                if (name) {
+                    data[name] = value;
+                }
+            }
+            console.dir(data);
+            for (k in data) {
+                validate(data[k]);
+            }
+            if (key) {
+                send(JSON.stringify(data), f, callback, falseCallback);
+            }
+        });
+    });
+};
+
 const menu = new Menu();
 
 menu.listener();
@@ -118,3 +208,4 @@ smoothScroll(menu);
 accordeon();
 tabs();
 modal();
+sendForm();
